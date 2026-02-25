@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrackHash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5f2c82, #49a09d);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-card {
+            margin-top: 30px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            display: none;
+        }
+
+        .result-header {
+            padding: 15px 20px;
+            background: #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .result-body {
+            padding: 20px;
+            min-height: 80px;
+        }
+
+        .success {
+            color: #0f5132;
+            background: #d1e7dd;
+            border: 1px solid #badbcc;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .error {
+            color: #842029;
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .waiting {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #084298;
+            background: #cfe2ff;
+            border: 1px solid #9ec5fe;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #084298;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.8em;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CrackHash</h1>
+            <p>Взлом MD5-хэшей</p>
+        </div>
+        <div class="content">
+            <form id="crackForm">
+                <div class="form-group">
+                    <label for="hash">Хэш</label>
+                    <input type="text" id="hash" name="hash" required pattern="[a-z0-9]{32}" value="e2fc714c4727ee9395f324cd2e7f331f" >
+                    <small style="display: block; margin-top: 5px; color: #6c757d;">
+                        🔹 32 символа: строчные буквы a–z и цифры 0–9
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="maxLength">Максимальная длина</label>
+                    <input type="number" id="maxLength" name="maxLength" min="1" max="10" value="4" required>
+                </div>
+                <button type="submit" id="submitBtn">Отправить</button>
+            </form>
+
+            <div class="result-card" id="resultCard">
+                <div class="result-header">Результат</div>
+                <div class="result-body" id="resultBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('crackForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultCard = document.getElementById('resultCard');
+        const resultBody = document.getElementById('resultBody');
+
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const hash = document.getElementById('hash').value.trim();
+            const maxLength = parseInt(document.getElementById('maxLength').value);
+
+            submitBtn.disabled = true;
+            showResult('Отправка запроса...', 'waiting');
+
+            try {
+                const response = await fetch('/api/hash/crack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hash, maxLength })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка сервера: ${response.status} — ${errorText}`);
+                }
+
+                const data = await response.json();
+                const requestId = data.requestId;
+
+                showResult(`Запрос принят. Ожидание результатов... (ID запроса: ${requestId})`, 'waiting');
+
+                const interval = setInterval(async () => {
+                    try {
+                        const statusResponse = await fetch(`/api/hash/status?requestId=${requestId}`);
+                        if (!statusResponse.ok) {
+                            throw new Error(`Ошибка получения статуса: ${statusResponse.status}`);
+                        }
+                        const statusData = await statusResponse.json();
+
+                        if (statusData.status === 'READY') {
+                            clearInterval(interval);
+                            const words = statusData.data || [];
+                            if (words.length === 0) {
+                                showResult('Совпадений не найдено', 'success');
+                            } else {
+                                showResult(`${words.join(', ')}`, 'success');
+                            }
+                            submitBtn.disabled = false;
+                        } else if (statusData.status === 'ERROR') {
+                            clearInterval(interval);
+                            showResult('Ошибка обработки запроса', 'error');
+                            submitBtn.disabled = false;
+                        } else {
+                            resultBody.innerHTML = `
+                                <div class="waiting">
+                                    <div class="spinner"></div>
+                                    <span>Запрос обрабатывается... (ID запроса: ${requestId})</span>
+                                </div>
+                            `;
+                        }
+                    } catch (err) {
+                        clearInterval(interval);
+                        showResult(`Ошибка: ${err.message}`, 'error');
+                        submitBtn.disabled = false;
+                    }
+                }, 1000);
+
+            } catch (err) {
+                showResult(`Ошибка: ${err.message}`, 'error');
+                submitBtn.disabled = false;
+            }
+        };
+
+        function showResult(message, type) {
+            resultCard.style.display = 'block';
+            let html = '';
+            if (type === 'success') {
+                html = `<div class="success">${message}</div>`;
+            } else if (type === 'error') {
+                html = `<div class="error">${message}</div>`;
+            } else if (type === 'waiting') {
+                html = `<div class="waiting"><div class="spinner"></div><span>${message}</span></div>`;
+            }
+            resultBody.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    ports:
+      - "8080:8080"
+    environment:
+      WORKER_URLS: "http://worker1:8081,http://worker2:8081,http://worker3:8081"
+    networks:
+      - crackhash-net
+
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      MANAGER_URL: "http://manager:8080"
+    networks:
+      - crackhash-net
+
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      MANAGER_URL: "http://manager:8080"
+    networks:
+      - crackhash-net
+
+  worker3:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      MANAGER_URL: "http://manager:8080"
+    networks:
+      - crackhash-net
+
+networks:
+  crackhash-net:
+    driver: bridge
