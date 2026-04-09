@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrackHash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5f2c82, #49a09d);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .history-header h3 {
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            padding: 8px 16px;
+            font-size: 0.8em;
+            width: auto;
+            margin: 0;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .history-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .status-inprogress {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-ready {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .result-words {
+            max-width: 300px;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.8em;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CrackHash</h1>
+            <p>Взлом MD5-хэшей методом перебора</p>
+        </div>
+        <div class="content">
+            <div class="form-section">
+                <form id="crackForm">
+                    <div class="form-group">
+                        <label for="hash">MD5 хэш</label>
+                        <input type="text" id="hash" name="hash" required pattern="[a-z0-9]{32}" placeholder="e2fc714c4727ee9395f324cd2e7f331f" value="e2fc714c4727ee9395f324cd2e7f331f">
+                        <small style="display: block; margin-top: 5px; color: #6c757d;">
+                            🔹 32 символа: строчные буквы a–f и цифры 0–9
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxLength">Максимальная длина слова</label>
+                        <input type="number" id="maxLength" name="maxLength" min="1" max="10" value="4" required>
+                    </div>
+                    <button type="submit" id="submitBtn">Отправить запрос</button>
+                </form>
+            </div>
+
+            <div class="history-section">
+                <div class="history-header">
+                    <h3>История запросов</h3>
+                    <button id="clearHistoryBtn" class="clear-btn">Очистить историю</button>
+                </div>
+                <div id="historyContainer">
+                    <div class="empty-history">Пока нет запросов. Отправьте первый запрос!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let requestsHistory = [];
+
+        function loadHistory() {
+            const saved = localStorage.getItem('crackhash_history');
+            if (saved) {
+                try {
+                    requestsHistory = JSON.parse(saved);
+                    requestsHistory.forEach(request => {
+                        if (request.status === 'IN_PROGRESS') {
+                            startPolling(request.requestId);
+                        }
+                    });
+                    renderHistory();
+                } catch (e) {
+                    console.error('Failed to load history', e);
+                }
+            }
+        }
+
+        function saveHistory() {
+            localStorage.setItem('crackhash_history', JSON.stringify(requestsHistory));
+        }
+
+        function addToHistory(requestId, hash, maxLength) {
+            const newRequest = {
+                requestId,
+                hash,
+                maxLength,
+                status: 'IN_PROGRESS',
+                result: null,
+                createdAt: new Date().toLocaleString(),
+                timestamp: Date.now()
+            };
+            requestsHistory.unshift(newRequest);
+            saveHistory();
+            renderHistory();
+            return newRequest;
+        }
+
+        function updateRequestStatus(requestId, status, result) {
+            const request = requestsHistory.find(r => r.requestId === requestId);
+            if (request) {
+                request.status = status;
+                if (result !== undefined) {
+                    request.result = result;
+                }
+                saveHistory();
+                renderHistory();
+            }
+        }
+
+        function startPolling(requestId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/hash/status?requestId=${requestId}`);
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            clearInterval(interval);
+                            updateRequestStatus(requestId, 'ERROR', null);
+                        }
+                        return;
+                    }
+                    const statusData = await response.json();
+                    
+                    if (statusData.status === 'READY') {
+                        clearInterval(interval);
+                        const words = statusData.data || [];
+                        updateRequestStatus(requestId, 'READY', words);
+                    } else if (statusData.status === 'ERROR') {
+                        clearInterval(interval);
+                        updateRequestStatus(requestId, 'ERROR', null);
+                    }
+                } catch (err) {
+                    console.error(`Polling error for ${requestId}:`, err);
+                }
+            }, 1500);
+            
+            if (!window.pollingIntervals) window.pollingIntervals = {};
+            window.pollingIntervals[requestId] = interval;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            
+            if (requestsHistory.length === 0) {
+                container.innerHTML = '<div class="empty-history">Нет запросов</div>';
+                return;
+            }
+            
+            const table = document.createElement('table');
+            table.className = 'history-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Хэш</th>
+                        <th>Макс. длина</th>
+                        <th>Статус</th>
+                        <th>Результат</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${requestsHistory.map(request => `
+                        <tr>
+                            <td style="white-space: nowrap;">${request.createdAt}</td>
+                            <td><code style="font-size: 0.8em;">${request.hash.substring(0, 16)}...</code></td>
+                            <td>${request.maxLength}</td>
+                            <td>
+                                <span class="status-badge status-${request.status === 'IN_PROGRESS' ? 'inprogress' : (request.status === 'READY' ? 'ready' : 'error')}">
+                                    ${request.status === 'IN_PROGRESS' ? '⏳ В процессе' : (request.status === 'READY' ? '✅ Готов' : '❌ Ошибка')}
+                                </span>
+                            </td>
+                            <td class="result-words">
+                                ${request.status === 'READY' && request.result && request.result.length > 0 
+                                    ? request.result.join(', ') 
+                                    : (request.status === 'READY' ? '— не найдено —' : (request.status === 'IN_PROGRESS' ? '⏳ ...' : '—'))}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        function clearHistory() {
+            if (confirm('Удалить всю историю запросов?')) {
+                if (window.pollingIntervals) {
+                    Object.values(window.pollingIntervals).forEach(interval => clearInterval(interval));
+                }
+                requestsHistory = [];
+                saveHistory();
+                renderHistory();
+                window.pollingIntervals = {};
+            }
+        }
+
+        const form = document.getElementById('crackForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        clearHistoryBtn.addEventListener('click', clearHistory);
+
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const hash = document.getElementById('hash').value.trim();
+            const maxLength = parseInt(document.getElementById('maxLength').value);
+
+            if (!/^[a-z0-9]{32}$/.test(hash)) {
+                alert('Хэш должен содержать ровно 32 символа: только строчные буквы a-f и цифры 0-9');
+                return;
+            }
+            if (maxLength < 1 || maxLength > 10) {
+                alert('Максимальная длина должна быть от 1 до 10');
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/hash/crack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hash, maxLength })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка сервера: ${response.status} — ${errorText}`);
+                }
+
+                const data = await response.json();
+                const requestId = data.requestId;
+
+                addToHistory(requestId, hash, maxLength);
+                startPolling(requestId);
+                
+            } catch (err) {
+                alert(`Ошибка: ${err.message}`);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        };
+
+        loadHistory();
+    </script>
+</body>
+</html>

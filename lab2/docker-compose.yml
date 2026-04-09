@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  mongo1:
+    image: mongo:6
+    container_name: mongo1
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo1_data:/data/db
+    networks:
+      - crackhash-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "try { let status = rs.status(); status.ok && (status.myState == 1 || status.myState == 2) } catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo1:27017' }, { _id: 1, host: 'mongo2:27017' }, { _id: 2, host: 'mongo3:27017' }] }) }"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  mongo2:
+    image: mongo:6
+    container_name: mongo2
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    volumes:
+      - mongo2_data:/data/db
+    networks:
+      - crackhash-net
+    depends_on:
+      - mongo1
+    restart: unless-stopped
+
+  mongo3:
+    image: mongo:6
+    container_name: mongo3
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    volumes:
+      - mongo3_data:/data/db
+    networks:
+      - crackhash-net
+    depends_on:
+      - mongo1
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - crackhash-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    ports:
+      - "8080:8080"
+    environment:
+      MONGO_URI: "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0"
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+      TASKS_QUEUE: "crack_tasks"
+      RESULTS_QUEUE: "crack_results"
+      WORKERS_COUNT: "2"
+    networks:
+      - crackhash-net
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  worker1:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+      TASKS_QUEUE: "crack_tasks"
+      RESULTS_QUEUE: "crack_results"
+      WORKER_ID: "worker-1"
+    networks:
+      - crackhash-net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  worker2:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      RABBITMQ_URI: "amqp://guest:guest@rabbitmq:5672/"
+      TASKS_QUEUE: "crack_tasks"
+      RESULTS_QUEUE: "crack_results"
+      WORKER_ID: "worker-2"
+    networks:
+      - crackhash-net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+  rabbitmq_data:
+
+networks:
+  crackhash-net:
+    driver: bridge
